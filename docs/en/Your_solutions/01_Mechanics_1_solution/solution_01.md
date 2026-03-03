@@ -42,6 +42,7 @@ $$\vec{a} \cdot \vec{b} = 3$$
 ## c) Cross Product $\vec{a} \times \vec{b}$
 
 The cross product is calculated using the determinant of a $3 \times 3$ matrix:
+
 $$\vec{a} \times \vec{b} = \begin{vmatrix} \mathbf{i} & \mathbf{j} & \mathbf{k} \\ 2 & 1 & -3 \\ 4 & -2 & 1 \end{vmatrix}$$
 
 ### Expansion by Components:
@@ -79,3 +80,4 @@ $$\theta \approx 1.395 \text{ radians or } 79.92^\circ$$
 | **$\vec{a} \cdot \vec{b}$** | $3$ |
 | **$\vec{a} \times \vec{b}$** | $[-5, -14, -8]$ |
 | **$\theta$** | $79.92^\circ$ |
+
