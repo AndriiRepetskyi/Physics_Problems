@@ -34,15 +34,29 @@ $$m_{ball} = 60 \text{ g} = 0.060 \text{ kg}$$
 
 ## Step 2 — Fly Momentum
 
-$$p_{fly} = 0.002 \times 10 = \boxed{0.020 \text{ kg·m/s}}$$
+Convert mass to kilograms first:
+
+$$m_{fly} = 2 \text{ g} = 0.002 \text{ kg}$$
+
+Apply $p = mv$:
+
+$$p_{fly} = m_{fly} \times v_{fly} = 0.002 \text{ kg} \times 10 \text{ m/s}$$
+
+$$\boxed{p_{fly} = 0.020 \text{ kg} \cdot \text{m/s}}$$
 
 ---
 
-## Step 3 — Ball Momentum
+## Step 3 — Tennis Ball Momentum
 
-$$p_{ball} = 0.060 \times 1 = \boxed{0.060 \text{ kg·m/s}}$$
+Convert mass to kilograms first:
 
----
+$$m_{ball} = 60 \text{ g} = 0.060 \text{ kg}$$
+
+Apply $p = mv$:
+
+$$p_{ball} = m_{ball} \times v_{ball} = 0.060 \text{ kg} \times 1 \text{ m/s}$$
+
+$$\boxed{p_{ball} = 0.060 \text{ kg} \cdot \text{m/s}}$$
 
 ## Step 4 — Compare
 

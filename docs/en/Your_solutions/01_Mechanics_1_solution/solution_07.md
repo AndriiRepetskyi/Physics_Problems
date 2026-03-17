@@ -54,4 +54,4 @@ $$\dot{x} = 4t, \qquad \dot{y} = 9t^2$$
 
 $$\boxed{\vec{v}(t) = 4t\,\hat{i} + 9t^2\,\hat{j}}$$
 
-$$\boxed{|\vec{v}(t)| = \sqrt{16t^2
+$$\boxed{|\vec{v}(t)|} = \sqrt{16t^2}
