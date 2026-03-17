@@ -54,4 +54,51 @@ $$\dot{x} = 4t, \qquad \dot{y} = 9t^2$$
 
 $$\boxed{\vec{v}(t) = 4t\,\hat{i} + 9t^2\,\hat{j}}$$
 
-$$\boxed{|\vec{v}(t)|} = \sqrt{16t^2}
+$$\boxed{|\vec{v}(t)| = \sqrt{16t^2 + 81t^4} = t\sqrt{16 + 81t^2}}$$
+
+Object starts from rest ($|\vec{v}(0)| = 0$), speed grows without bound.
+
+---
+
+## Part 4 — Acceleration and Magnitude
+
+$$\ddot{x} = 4, \qquad \ddot{y} = 18t$$
+
+$$\boxed{\vec{a}(t) = 4\,\hat{i} + 18t\,\hat{j}}$$
+
+$$\boxed{|\vec{a}(t)| = \sqrt{16 + 324t^2}}$$
+
+---
+
+## Part 5 — Is Acceleration Constant?
+
+$$\vec{a}(t) = 4\,\hat{i} + 18t\,\hat{j}$$
+
+$a_x = 4$ is constant, but $a_y = 18t$ depends on $t$.
+
+$$\boxed{\text{No — acceleration is NOT constant.}}$$
+
+---
+
+## ✅ Summary
+
+| Quantity | Result |
+|----------|--------|
+| Trajectory | $y = \frac{3\sqrt{2}}{4}\,x^{3/2}$ |
+| $\vec{v}(t)$ | $4t\,\hat{i} + 9t^2\,\hat{j}$ |
+| $|\vec{v}(t)|$ | $t\sqrt{16+81t^2}$ |
+| $\vec{a}(t)$ | $4\,\hat{i} + 18t\,\hat{j}$ |
+| $|\vec{a}(t)|$ | $\sqrt{16+324t^2}$ |
+| Constant? | No — $a_y = 18t$ varies |
+
+---
+
+## 🔍 Key Rule
+
+| Highest power in $\vec{r}(t)$ | Acceleration |
+|-------------------------------|--------------|
+| $t^2$ (quadratic) | Constant |
+| $t^3$ or higher | Varies with time |
+
+> **Takeaway:** Cubic position means acceleration is never fully constant —
+> differentiating $t^3$ twice gives $6t$, which still depends on $t$.
