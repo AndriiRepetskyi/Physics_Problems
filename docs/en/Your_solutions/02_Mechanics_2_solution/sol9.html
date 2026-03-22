@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vertical Throw with Drag</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f8f8f6;
+    color: #1a1a1a;
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1.5rem 3rem;
+  }
+  h2 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.01em;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+    margin-bottom: 1.75rem;
+    background: #fff;
+    border: 0.5px solid #e0e0de;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+  }
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+  }
+  .ctrl-label span { font-weight: 500; color: #333; }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #e0e0de;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #378ADD;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px #378ADD;
+    cursor: pointer;
+  }
+  .chart-wrap {
+    background: #fff;
+    border: 0.5px solid #e0e0de;
+    border-radius: 12px;
+    padding: 1.25rem 1rem 1rem;
+    margin-bottom: 1rem;
+  }
+  canvas { display: block; width: 100%; }
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #666;
+  }
+  .leg-line {
+    width: 24px;
+    height: 2.5px;
+    border-radius: 2px;
+  }
+  .results {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .metric {
+    background: #fff;
+    border: 0.5px solid #e0e0de;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+  }
+  .mlabel { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .mvalue { font-size: 18px; font-weight: 500; color: #1a1a1a; }
+  .msub   { font-size: 11px; color: #bbb; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<h2>Vertical throw with drag — simulation</h2>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="ctrl-label">Initial velocity v₀ <span id="v0val">20 m/s</span></div>
+    <input type="range" id="v0" min="1" max="60" step="1" value="20" oninput="update()">
+  </div>
+  <div class="control-group">
+    <div class="ctrl-label">Drag coefficient k <span id="kval">0.50 N·s/m</span></div>
+    <input type="range" id="kd" min="0.01" max="3" step="0.01" value="0.5" oninput="update()">
+  </div>
+  <div class="control-group">
+    <div class="ctrl-label">Mass m <span id="mval">1.0 kg</span></div>
+    <input type="range" id="mass" min="0.1" max="5" step="0.1" value="1" oninput="update()">
+  </div>
+  <div class="control-group">
+    <div class="ctrl-label">Initial height x₀ <span id="x0val">10 m</span></div>
+    <input type="range" id="x0" min="0" max="30" step="1" value="10" oninput="update()">
+  </div>
+</div>
+
+<div class="chart-wrap">
+  <canvas id="cvs" height="380"></canvas>
+  <div class="legend">
+    <div class="leg-item">
+      <div class="leg-line" style="background:#378ADD;"></div>
+      <span>with drag</span>
+    </div>
+    <div class="leg-item">
+      <div class="leg-line" style="background:#c0bdb5; border-top: 2px dashed #c0bdb5; height:0;"></div>
+      <span>no drag</span>
+    </div>
+  </div>
+</div>
+
+<div class="results">
+  <div class="metric">
+    <div class="mlabel">Max height — drag</div>
+    <div class="mvalue" id="rmaxd">—</div>
+    <div class="msub">x<sub>max</sub> with drag</div>
+  </div>
+  <div class="metric">
+    <div class="mlabel">Max height — no drag</div>
+    <div class="mvalue" id="rmaxnd">—</div>
+    <div class="msub">x<sub>max</sub> free flight</div>
+  </div>
+  <div class="metric">
+    <div class="mlabel">Time to peak — drag</div>
+    <div class="mvalue" id="rtd">—</div>
+    <div class="msub">t at v = 0</div>
+  </div>
+  <div class="metric">
+    <div class="mlabel">Terminal velocity</div>
+    <div class="mvalue" id="rterm">—</div>
+    <div class="msub">mg / k</div>
+  </div>
+</div>
+
+<script>
+const cvs  = document.getElementById('cvs');
+const ctx  = cvs.getContext('2d');
+const DPR  = window.devicePixelRatio || 1;
+const g    = 9.81;
+
+function resize() {
+  const w = cvs.parentElement.clientWidth - 32;
+  cvs.style.width  = w + 'px';
+  cvs.style.height = '380px';
+  cvs.width  = w * DPR;
+  cvs.height = 380 * DPR;
+  ctx.scale(DPR, DPR);
+}
+
+function simulate(v0, k, m, x0) {
+  const dt = 0.002, steps = 8000;
+  const xs = [], ts = [];
+  let v = v0, x = x0, t = 0;
+  for (let i = 0; i < steps; i++) {
+    xs.push(x); ts.push(t);
+    if (x < -0.5 && v < 0) break;
+    const a = -g - (k / m) * v;
+    v += a * dt;
+    x += v * dt;
+    t += dt;
+  }
+  return { xs, ts };
+}
+
+function noDrag(v0, x0, ts) {
+  return ts.map(t => x0 + v0 * t - 0.5 * g * t * t);
+}
+
+function drawGrid(W, H, pad, xMin, xMax, tMax) {
+  ctx.save();
+  ctx.strokeStyle = '#f0efeb';
+  ctx.lineWidth   = 1;
+  ctx.fillStyle   = '#bbb';
+  ctx.font        = `${11 * (1/DPR < 1 ? 1 : 1)}px -apple-system, sans-serif`;
+
+  const xSteps = 5, tSteps = 5;
+
+  for (let i = 0; i <= xSteps; i++) {
+    const val = xMin + i * (xMax - xMin) / xSteps;
+    const yp  = H - pad.b - ((val - xMin) / (xMax - xMin)) * (H - pad.t - pad.b);
+    ctx.beginPath(); ctx.moveTo(pad.l, yp); ctx.lineTo(W - pad.r, yp); ctx.stroke();
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(0) + ' m', pad.l - 6, yp + 4);
+  }
+
+  for (let i = 0; i <= tSteps; i++) {
+    const val = i * tMax / tSteps;
+    const xp  = pad.l + (val / tMax) * (W - pad.l - pad.r);
+    ctx.beginPath(); ctx.moveTo(xp, pad.t); ctx.lineTo(xp, H - pad.b); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillText(val.toFixed(1) + 's', xp, H - pad.b + 16);
+  }
+
+  ctx.strokeStyle = '#d8d6d0';
+  ctx.lineWidth   = 0.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t);    ctx.lineTo(pad.l, H - pad.b);    ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCurve(ts, ys, xMin, xMax, tMax, W, H, pad, color, dashed) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = dashed ? 1.5 : 2.5;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+  if (dashed) ctx.setLineDash([6, 5]);
+
+  const toX = t => pad.l + (t / tMax) * (W - pad.l - pad.r);
+  const toY = x => H - pad.b - ((x - xMin) / (xMax - xMin)) * (H - pad.t - pad.b);
+
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i < ts.length; i++) {
+    const px = toX(ts[i]);
+    const py = toY(ys[i]);
+    if (!isFinite(py)) continue;
+    if (!started) { ctx.moveTo(px, py); started = true; }
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+function update() {
+  const v0   = parseFloat(document.getElementById('v0').value);
+  const k    = parseFloat(document.getElementById('kd').value);
+  const m    = parseFloat(document.getElementById('mass').value);
+  const x0   = parseFloat(document.getElementById('x0').value);
+
+  document.getElementById('v0val').textContent  = v0.toFixed(0)  + ' m/s';
+  document.getElementById('kval').textContent   = k.toFixed(2)   + ' N·s/m';
+  document.getElementById('mval').textContent   = m.toFixed(1)   + ' kg';
+  document.getElementById('x0val').textContent  = x0.toFixed(0)  + ' m';
+
+  const { xs, ts } = simulate(v0, k, m, x0);
+  const nd = noDrag(v0, x0, ts);
+
+  const xmaxD  = Math.max(...xs);
+  const xmaxND = Math.max(...nd.filter(isFinite));
+  const tmaxD  = ts[xs.indexOf(xmaxD)];
+  const vterm  = m * g / k;
+
+  document.getElementById('rmaxd').textContent  = xmaxD.toFixed(2)  + ' m';
+  document.getElementById('rmaxnd').textContent = xmaxND.toFixed(2) + ' m';
+  document.getElementById('rtd').textContent    = tmaxD.toFixed(2)  + ' s';
+  document.getElementById('rterm').textContent  = vterm.toFixed(2)  + ' m/s';
+
+  const W    = cvs.width  / DPR;
+  const H    = cvs.height / DPR;
+  const pad  = { l: 52, r: 20, t: 20, b: 36 };
+  const tMax = ts[ts.length - 1];
+  const allY = [...xs, ...nd].filter(isFinite);
+  const xMin = Math.min(0, ...allY);
+  const xMax = Math.max(...allY) * 1.08;
+
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  drawGrid(W, H, pad, xMin, xMax, tMax);
+  drawCurve(ts, nd, xMin, xMax, tMax, W, H, pad, '#c8c5bc', true);
+  drawCurve(ts, xs, xMin, xMax, tMax, W, H, pad, '#378ADD', false);
+
+  const toX = t => pad.l + (t / tMax) * (W - pad.l - pad.r);
+  const toY = x => H - pad.b - ((x - xMin) / (xMax - xMin)) * (H - pad.t - pad.b);
+
+  ctx.save();
+  ctx.fillStyle   = '#378ADD';
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+  ctx.arc(toX(tmaxD), toY(xmaxD), 5, 0, Math.PI * 2);
+  ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle = '#555';
+  ctx.font      = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(xmaxD.toFixed(1) + ' m', toX(tmaxD) + 8, toY(xmaxD) + 4);
+  ctx.restore();
+}
+
+resize();
+update();
+window.addEventListener('resize', () => { resize(); update(); });
+</script>
+</body>
+</html>
